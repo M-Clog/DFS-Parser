@@ -62,6 +62,7 @@ while True:
 INCLUDED = []
 STRIPPED_BEFORE = 5
 KEPT_WIDTH = 5
+lowSignalSelected = False
 # MASKING DATA NEAR CHANGES OF BELLOW
 INCLUDED = DFS_func.selecter(MAX_INT, INCLUDED, STRIPPED_BEFORE, KEPT_WIDTH)
 
@@ -80,15 +81,19 @@ while True:
     print 'Result from automatic window selection in green.'
     # Offering choice to change type of selection
     choice = raw_input(
-        '(O)kay, change (W)idth or (M)anual selection of the limits ? ')
+        '(O)kay, change (W)idth, (L)ow signal selecter, or (M)anual selection of the limits ? ')
     INCLUDED = []
     plt.close()
     # Simple width change
     if choice == 'W':
         KEPT_WIDTH = int(
             raw_input('Enter new width (current is %d)' % KEPT_WIDTH))
-        INCLUDED = DFS_func.selecter(
-            MAX_INT, INCLUDED, STRIPPED_BEFORE, KEPT_WIDTH)
+        if lowSignalSelected:
+            INCLUDED = DFS_func.lowSelecter(
+                MAX_INT, INCLUDED, INT, STRIPPED_BEFORE, KEPT_WIDTH)
+        else:
+            INCLUDED = DFS_func.selecter(
+                MAX_INT, INCLUDED, STRIPPED_BEFORE, KEPT_WIDTH)
         print 'Result with the new width'
     # Manual selection of bounds
     if choice == 'M':
@@ -108,6 +113,13 @@ while True:
         if len(xvales.x) % 2 != 0:
             INCLUDED += [range(xvales.x[-1], len(REF_M))]
     # Keep last selection
+
+    #Low signal selecter, by Max Lloyd
+    if choice == 'L':
+        test2=DFS_func.lowSelecter(
+            MAX_INT,INCLUDED, INT, STRIPPED_BEFORE, KEPT_WIDTH)
+        lowSignalSelected = True
+
     if choice == 'O':
         print('Mask selected')
         f1, axarr1 = plt.subplots(2)
@@ -117,7 +129,7 @@ while True:
         axarr1[1].plot(REF_M, RSLT.T)
         axarr1[1].set_title('Averaged mass scans for each cycle')
         break
-    if choice not in ['O', 'W', 'M']:
+    if choice not in ['O', 'W', 'M', 'L']:
         print('Wrong entry, try again')
         INCLUDED = DFS_func.selecter(
             MAX_INT, INCLUDED, STRIPPED_BEFORE, KEPT_WIDTH)
