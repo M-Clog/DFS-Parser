@@ -129,6 +129,40 @@ def selecter(MAX_INT, INCLUDED, STRIPPED_BEFORE, KEPT_WIDTH):
         INCLUDED = range(len(MAX_INT))
     return INCLUDED
 
+def lowSelecter(MAX_INT, INCLUDED, INT, STRIPPED_BEFORE, KEPT_WIDTH):
+    '''Function with an low noise method for finding the bellows switches,
+    tuned for low signal settings'''
+    #Fuction works by detecting large drops in total ion intensity
+    #Averaged over a window of three scans
+    #First, makes a list of the signal sum for every scan
+    SUM_INT=[]
+    for i in range(len(MAX_INT)):
+        SUM_INT.append(sum(INT[i]))
+    LAST_SIGNAL=SUM_INT[0]
+    FLATTOP=1
+    #Now, observes the mean change in total signal, with a three-cycle window
+    #Normalized to the cumulative intensity signal
+    #Compared to the most recent accepted signal, to account for pressure bleed-out
+    for i in range(3,len(MAX_INT)-3):
+        drop=(np.mean(SUM_INT[i:i+3])-np.mean(SUM_INT[i-3:i]))/LAST_SIGNAL
+        if (drop < -0.3 and i > STRIPPED_BEFORE + KEPT_WIDTH and FLATTOP == 1):
+            INCLUDED += [
+                a for a in range(i - STRIPPED_BEFORE - KEPT_WIDTH, i - STRIPPED_BEFORE)]
+            FLATTOP = 0
+            LAST_SIGNAL=SUM_INT[i-3]
+        if SUM_INT[i] > 0.7 * LAST_SIGNAL and FLATTOP == 0:
+            FLATTOP = 1
+    #If signal is stable at the end of the scan for long enough, include the last cycle
+    #if FLATTOP == 1 and INCLUDED[-1] + KEPT_WIDTH + STRIPPED_BEFORE < len(SUM_INT):
+    #    INCLUDED += [
+    #        a for a in range(i - STRIPPED_BEFORE - KEPT_WIDTH, i - STRIPPED_BEFORE)]
+
+    # If no drops in intensity, keep everything
+    if INCLUDED ==[]:
+        INCLUDED = range(len(MAX_INT))
+    return INCLUDED
+
+
 
 def excluder(MAX_INT, INT, INCLUDED, REF_M, MASSES):
     '''Function using the included variable to trim the data'''
