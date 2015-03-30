@@ -81,7 +81,8 @@ while True:
     print 'Result from automatic window selection in green.'
     # Offering choice to change type of selection
     choice = raw_input(
-        '(O)kay, change (W)idth, (L)ow signal selecter, or (M)anual selection of the limits ? ')
+        '(O)kay, change (W)idth, (L)ow signal selecter,'
+        ' or (M)anual selection of the limits ? ')
     INCLUDED = []
     plt.close()
     # Simple width change
@@ -114,10 +115,10 @@ while True:
             INCLUDED += [range(xvales.x[-1], len(REF_M))]
     # Keep last selection
 
-    #Low signal selecter, by Max Lloyd
+    # Low signal selecter, by Max Lloyd
     if choice == 'L':
-        test2=DFS_func.lowSelecter(
-            MAX_INT,INCLUDED, INT, STRIPPED_BEFORE, KEPT_WIDTH)
+        test2 = DFS_func.lowSelecter(
+            MAX_INT, INCLUDED, INT, STRIPPED_BEFORE, KEPT_WIDTH)
         lowSignalSelected = True
 
     if choice == 'O':
@@ -181,7 +182,7 @@ errs = 10 * index * np.sqrt(abs(RSLT) / (10 * index)) + 1
 # Normalization
 for i in range(len(RSLT)):
     if max(RSLT[i]) > 0:
-        errs[i] = (errs[i] + np.mean(errs[i]))/2 / max(RSLT[i])
+        errs[i] = (errs[i] + np.mean(errs[i])) / 2 / max(RSLT[i])
         RSLT[i] = RSLT[i] / max(RSLT[i])
     if max(RSLT[i]) == 0:
         break
