@@ -347,3 +347,8 @@ if len(variables) == 1:
         print('Intensity : ' +
               str(variables[0]['amp' + str(i)]) + ' +/- ' + str(
                   errors[0]['amp' + str(i)]))
+
+choice = raw_input('Do you want to export the peak intensities (Y/N)? ')
+if choice.upper() =='Y':
+    DFS_func.peakExporter(PEAKS,variables, FILENAME, CLN_INT, INT)
+    print('Integrated peak intensities exported into .csv file')

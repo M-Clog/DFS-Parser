@@ -5,6 +5,7 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.special as spp
+import scipy.integrate as integrate
 # import iminuit
 
 
@@ -343,3 +344,47 @@ def iscan(m, var, mini, maxi, nb):
     var_mini = 0
     print list
     return var_mini
+
+def peakExporter(PEAKS, variables, FILENAME,CLN_INT,INT):
+    '''Exports the amplitudes and integrated peak areas that are the basis for the deltas'''
+    #calculating mean cumulative counts for used scans
+    onPeak=False
+    indStart=0
+    SUM_RSLT=[]
+    for i in range(1,len(CLN_INT)):
+        if CLN_INT[i] !=0 and not onPeak:
+            indStart=i
+            onPeak = True
+
+        elif CLN_INT[i] ==0 and onPeak:
+            SUM_RSLT.append(np.mean(np.sum(INT[indStart:i],axis=1)))
+            onPeak = False
+
+    #pulling out peak fit data from variables
+    cupwidths=[]
+    sigmas=[]
+    areas=np.zeros((len(variables),PEAKS))
+    areas_raw=np.zeros((len(variables),PEAKS))
+    amps=np.zeros((len(variables),PEAKS))
+    centers=np.zeros((len(variables),PEAKS))
+    relativeAreas=np.zeros((len(variables),PEAKS))
+    for i in range(len(variables)):
+        cupwidths.append(variables[i]['cupwidth'])
+        sigmas.append(variables[i]['sigma'])
+        for j in range(PEAKS):
+            amp_j='amp'+str(j)
+            center_j='center'+str(j)
+            amps[i][j]=variables[i][amp_j]
+            centers[i][j]=variables[i][center_j]
+            peakModel= lambda x: amps[i][j]*peakshape(x,centers[i][j],sigmas[i],cupwidths[i])
+            lowerBound= centers[i][j]-8*sigmas[i]
+            upperBound = centers[i][j]+8*sigmas[i]
+            areas[i][j]= integrate.quad(peakModel,lowerBound,upperBound)[0] #integrate over the peak to get the area
+            relativeAreas[i][j] = areas[i][j]/areas[i][0]
+
+        firstPeak=SUM_RSLT[i]/np.sum(relativeAreas[i]) #solving the system of equations to get the absolute abundance of the first peak
+        areas_raw[i]=[k*firstPeak for k in relativeAreas[i]] #applying this to all other possbile areas
+
+
+    #actually exporting the data
+    exporter(areas_raw,FILENAME+'_areas.csv')
