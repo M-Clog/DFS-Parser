@@ -81,7 +81,8 @@ while True:
     print 'Result from automatic window selection in green.'
     # Offering choice to change type of selection
     choice = raw_input(
-        '(O)kay, change (W)idth, (L)ow signal selecter, or (M)anual selection of the limits ? ')
+        '(O)kay, change (W)idth, (L)ow signal selecter,'
+        ' or (M)anual selection of the limits ? ')
     INCLUDED = []
     plt.close()
     # Simple width change
@@ -114,10 +115,10 @@ while True:
             INCLUDED += [range(xvales.x[-1], len(REF_M))]
     # Keep last selection
 
-    #Low signal selecter, by Max Lloyd
+    # Low signal selecter, by Max Lloyd
     if choice == 'L':
-        test2=DFS_func.lowSelecter(
-            MAX_INT,INCLUDED, INT, STRIPPED_BEFORE, KEPT_WIDTH)
+        test2 = DFS_func.lowSelecter(
+            MAX_INT, INCLUDED, INT, STRIPPED_BEFORE, KEPT_WIDTH)
         lowSignalSelected = True
 
     if choice == 'O':
@@ -181,7 +182,7 @@ errs = 10 * index * np.sqrt(abs(RSLT) / (10 * index)) + 1
 # Normalization
 for i in range(len(RSLT)):
     if max(RSLT[i]) > 0:
-        errs[i] = (errs[i] + np.mean(errs[i]))/2 / max(RSLT[i])
+        errs[i] = (errs[i] + np.mean(errs[i])) / 2 / max(RSLT[i])
         RSLT[i] = RSLT[i] / max(RSLT[i])
     if max(RSLT[i]) == 0:
         break
@@ -222,10 +223,10 @@ abund_guess = 0.5 * \
     np.array([RSLT[0][DFS_func.nearest_point(i, REF_M)] for i in mass_guess])
 # Arbitrary values for resolution and cup width, easy to tweak with
 # a rough scan after the fit objects are created
-res_guess = np.array(float(30000))
+res_guess = np.array([float(30000)])
 sigma_guess = ((min(REF_M) + max(REF_M)) / 2) / \
     res_guess / 2.0 / 1.645 / np.sqrt(2.0)
-cup_guess = np.array(float(0.00015 * REF_M[0] / 18))
+cup_guess = np.array([float(0.00015 * REF_M[0] / 18)])
 
 # CONSTRUCTING MODEL
 # Building one function with arguments for each peak, multiple concurrent fits
@@ -260,8 +261,11 @@ for i in range(PEAKS):
     pars['center' + str(i)] = mass_guess[i]
     pars['error_center' + str(i)] = 0.0001
     pars['error_amp' + str(i)] = 0.001
+    pars['error_cupwidth'] = 0.001
+    pars['error_sigma'] = 0.001
 
 print(abund_guess)
+
 m = iminuit.Minuit(chi2, **pars)
 plt.close()
 f, axarr = plt.subplots(3)
@@ -270,6 +274,19 @@ axarr[0].plot(CLN_INT, '--')
 axarr[1].plot(REF_M, RSLT.T)
 chi2.draw(m, parts=False)
 print('Initial guess in red, data points and error bars in blue')
+# a = raw_input('Press a key to begin playing with input parameters')
+# print cup_guess
+# best_try = probfit.try_chi2(
+#     MODEL, RSLT[0], amp0=abund_guess[0], amp1=abund_guess[1],
+#    sigma=sigma_guess, center0=mass_guess[0], center1=mass_guess[1],
+#    cupwidth=[cup_guess[0]*0.1, cup_guess[0]*10])
+# print best_try
+# for i in np.arange(-10,10,1):
+#   .....:   pars['cupwidth']= cup_guess + i * pars['error_cupwidth']
+#   .....:   m = iminuit.Minuit(chi2, **pars)
+#   .....:   a = chi2.draw(m ,parts = False)
+#   .....:   list += [(i, np.sum((a[0][1]-a[2][1])**2))]
+
 a = raw_input('Press a key to begin fitting the data')
 m.migrad()
 a = raw_input('Press a key to display the fit result')
@@ -294,6 +311,8 @@ for i in range(len(RSLT)):
         pars['center' + str(j)] = mass_guess[j]
         pars['error_center' + str(j)] = 0.0001
         pars['error_amp' + str(j)] = 0.001
+        pars['error_cupwidth'] = 0.001
+        pars['error_sigma'] = 0.001
     print i
     m += [iminuit.Minuit(chi2[i], pedantic=False, print_level=0, **pars)]
     m[i].migrad()
@@ -328,3 +347,8 @@ if len(variables) == 1:
         print('Intensity : ' +
               str(variables[0]['amp' + str(i)]) + ' +/- ' + str(
                   errors[0]['amp' + str(i)]))
+
+choice = raw_input('Do you want to export the peak intensities (Y/N)? ')
+if choice.upper() =='Y':
+    DFS_func.peakExporter(PEAKS,variables, FILENAME, CLN_INT, INT)
+    print('Integrated peak intensities exported into .csv file')
